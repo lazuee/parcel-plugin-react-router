@@ -5,16 +5,11 @@ on:
     branches:
       - main
 
-permissions: {}
+permissions: write-all
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    permissions:
-      # create release commit
-      contents: write
-      # create release PR
-      pull-requests: write
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
     steps:
@@ -26,7 +21,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   npm-publish:
-    permissions: write-all
     needs: [release-please]
     runs-on: ubuntu-latest
     # Only run if a release was created
