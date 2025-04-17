@@ -1,0 +1,21 @@
+{
+  "name": "parcel-config-react-router-experimental",
+  "version": "0.0.0",
+  "description": "",
+  "main": "config.json",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react-router",
+    "parcel"
+  ],
+  "author": "Jacob Ebey",
+  "license": "ISC",
+  "dependencies": {
+    "@parcel/config-default": "^2.14.4"
+  },
+  "engines": {
+    "parcel": "2.x"
+  }
+}
