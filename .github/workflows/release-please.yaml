@@ -24,7 +24,7 @@ jobs:
     needs: [release-please]
     runs-on: ubuntu-latest
     # Only run if a release was created
-    if: ${{ !needs.release-please.outputs.prs_created }}
+    if: ${{ needs.release-please.outputs.releases_created }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,19 +35,16 @@ jobs:
         with:
           run_install: false
       - uses: JS-DevTools/npm-publish@v3
-        if: ${{ needs.release-please.outputs['packages/resolver--release_created'] }}
         with:
           token: ${{ secrets.NPM_TOKEN }}
           strategy: upgrade
           package: ./packages/resolver
       - uses: JS-DevTools/npm-publish@v3
-        if: ${{ needs.release-please.outputs['packages/typegen--release_created'] }}
         with:
           token: ${{ secrets.NPM_TOKEN }}
           strategy: upgrade
           package: ./packages/typegen
       - uses: JS-DevTools/npm-publish@v3
-        if: ${{ needs.release-please.outputs['packages/config--release_created'] }}
         with:
           token: ${{ secrets.NPM_TOKEN }}
           strategy: upgrade
