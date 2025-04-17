@@ -38,4 +38,5 @@ jobs:
           run_install: false
       - run: pnpm publish -r --access public --no-git-checks
         env:
+          NPM_EMAIL: jacob.ebey@live.com
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
