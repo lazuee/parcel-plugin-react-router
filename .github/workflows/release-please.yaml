@@ -31,11 +31,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 23
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-      - run: pnpm i --fix-lockfile
-      - run: pnpm build
+      - run: npm i -g yarn@1.22.22
+      - run: yarn
+      - run: yarn build
       - uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
