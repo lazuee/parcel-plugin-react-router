@@ -18,6 +18,8 @@ jobs:
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: 🆕 Create or update release
         uses: googleapis/release-please-action@v4
         id: release
@@ -29,6 +31,8 @@ jobs:
     # Only run if a release was created
     if: ${{ needs.release-please.outputs.releases_created }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 10,
