@@ -24,7 +24,7 @@ jobs:
     needs: [release-please]
     runs-on: ubuntu-latest
     # Only run if a release was created
-    if: ${{ needs.release-please.outputs.releases_created }}
+    if: ${{ !needs.release-please.outputs.prs_created }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
