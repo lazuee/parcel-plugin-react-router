@@ -2,14 +2,40 @@
   "private": true,
   "scripts": {
     "build": "yarn workspace parcel-resolver-react-router-experimental run build && yarn workspace parcel-resolver-react-router-typegen-experimental run build",
-    "watch": "yarn workspace parcel-resolver-react-router-experimental run build --watch & yarn workspace parcel-resolver-react-router-typegen-experimental run build --watch"
+    "watch": "yarn workspace parcel-resolver-react-router-experimental run build --watch & yarn workspace parcel-resolver-react-router-typegen-experimental run build --watch",
+    "app:build": "parcel build",
+    "app:clean": "rm -rf dist node_modules .parcel-cache .react-router .react-router-parcel",
+    "app:dev": "parcel",
+    "app:start": "node ./dist/server.js"
+  },
+  "targets": {
+    "server": {
+      "source": "app/server.ts",
+      "context": "react-server",
+      "scopeHoist": false,
+      "includeNodeModules": {
+        "express": false
+      }
+    }
   },
   "devDependencies": {
+    "@react-router/dev": "0.0.0-experimental-573acd4d4",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@types/express": "^4",
     "@types/node": "^22.14.1",
+    "@parcel/runtime-rsc": "^2.14.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "express": "^4.21.2",
+    "parcel": "^2.14.4",
+    "prettier": "^3.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "0.0.0-experimental-573acd4d4",
+    "react-server-dom-parcel": "^19.1.0",
     "typescript": "^5.8.3"
   },
   "workspaces": [
-    "fixture",
     "packages/*"
   ]
 }
