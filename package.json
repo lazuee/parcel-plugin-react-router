@@ -6,7 +6,7 @@
     "app:build": "parcel build",
     "app:clean": "rm -rf dist .parcel-cache .react-router .react-router-parcel",
     "app:dev": "parcel",
-    "app:start": "node ./dist/server.js"
+    "app:start": "node ./dist/server/server.js"
   },
   "targets": {
     "server": {
