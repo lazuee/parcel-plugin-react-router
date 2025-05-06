@@ -26,7 +26,13 @@ const SERVER_ONLY_ROUTE_EXPORTS = [
   "ServerComponent",
 ];
 
-const COMPONENT_EXPORTS = ["ErrorBoundary", "HydrateFallback", "Layout"];
+const COMPONENT_EXPORTS = [
+  "default",
+  "ErrorBoundary",
+  "HydrateFallback",
+  "Layout",
+];
+const COMPONENT_EXPORTS_SET = new Set(COMPONENT_EXPORTS);
 
 const CLIENT_NON_COMPONENT_EXPORTS = [
   "clientAction",
@@ -41,9 +47,7 @@ const CLIENT_NON_COMPONENT_EXPORTS_SET = new Set(CLIENT_NON_COMPONENT_EXPORTS);
 const CLIENT_ROUTE_EXPORTS = [
   ...CLIENT_NON_COMPONENT_EXPORTS,
   ...COMPONENT_EXPORTS,
-  "default",
 ];
-const CLIENT_ROUTE_EXPORTS_SET = new Set(CLIENT_ROUTE_EXPORTS);
 
 export default new Resolver({
   async loadConfig({ config, options }) {
@@ -227,7 +231,7 @@ declare module "virtual:react-router/routes" {
         }
       } else {
         for (const staticExport of staticExports) {
-          if (CLIENT_ROUTE_EXPORTS_SET.has(staticExport)) {
+          if (CLIENT_NON_COMPONENT_EXPORTS_SET.has(staticExport)) {
             code += `export { ${staticExport} } from ${JSON.stringify(
               filePath + "?client-route-module"
             )};\n`;
@@ -312,10 +316,22 @@ declare module "virtual:react-router/routes" {
       let code = generate(ast).code;
       if (!isServerFirstRoute) {
         for (const staticExport of staticExports) {
-          if (CLIENT_ROUTE_EXPORTS_SET.has(staticExport)) {
+          if (CLIENT_NON_COMPONENT_EXPORTS_SET.has(staticExport)) {
             code += `export { ${staticExport} } from ${JSON.stringify(
               filePath + "?client-route-module"
             )};\n`;
+          } else if (COMPONENT_EXPORTS_SET.has(staticExport)) {
+            // Wrap all route-level client components in server components when
+            // it's not a server-first route so Parcel can use the server
+            // component to inject CSS resources into the JSX
+            const isDefault = staticExport === "default";
+            const componentName = isDefault ? "Component" : staticExport;
+            code += `import { ${staticExport} as Client${componentName} } from ${JSON.stringify(
+              filePath + "?client-route-module"
+            )};\n`;
+            code += `export ${isDefault ? "default" : `const ${staticExport} =`} function ${componentName}(props) {
+              return <Client${componentName} {...props} />;
+            }\n`;
           }
         }
       }
