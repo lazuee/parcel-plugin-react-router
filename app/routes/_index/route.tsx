@@ -1,4 +1,4 @@
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/route.ts";
 import { log } from "./actions.ts";
 import "./styles.css";
 
