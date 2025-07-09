@@ -1,7 +1,8 @@
 import * as React from "react";
 import { renderToReadableStream } from "react-dom/server.edge" assert { env: "react-client" };
 import {
-  unstable_RouterContextProvider as RouterContextProvider,
+  AppLoadContext,
+  unstable_InitialContext,
   unstable_routeRSCServerRequest,
   unstable_RSCStaticRouter,
 } from "react-router" assert { env: "react-client" };
@@ -10,10 +11,15 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge" a
 
 import { fetchServer } from "./entry.rsc.ts" assert { env: "react-server" };
 
-const requestHandler = (requestContext?: RouterContextProvider) => {
+import { type UNSAFE_MiddlewareEnabled as MiddlewareEnabled } from "react-router";
+
+const requestHandler = (loadContext?: MiddlewareEnabled extends true
+  ? unstable_InitialContext
+  : AppLoadContext) => {
+
   return (request: Request) => unstable_routeRSCServerRequest({
     request,
-    fetchServer: fetchServer(requestContext),
+    fetchServer: fetchServer(loadContext),
     createFromReadableStream,
     async renderHTML(getPayload) {
       return await renderToReadableStream(

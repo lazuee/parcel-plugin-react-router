@@ -7,7 +7,7 @@ function createExpressApp({ distDir = "dist" }: { distDir?: string } = {}) {
 
   app.use("/client", express.static(`${distDir}/client`));
 
-  app.use(createRequestListener(reactRouterRequestHandler));
+  app.use(createRequestListener(reactRouterRequestHandler()));
 
   return app;
 }

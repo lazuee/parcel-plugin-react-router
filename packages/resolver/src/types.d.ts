@@ -5,7 +5,13 @@ declare module "virtual:react-router/routes" {
 }
 
 declare module "virtual:react-router/config" {
-import type { Config } from "@react-router/dev/config";
+  import type { Config } from "@react-router/dev/config";
   const config: Config;
   export default config;
+}
+
+declare module "virtual:react-router/appLoadContext" {
+  import { AppLoadContext, unstable_createContext } from 'react-router';
+  const appLoadContext: unstable_createContext<AppLoadContext>;
+  export default appLoadContext;
 }

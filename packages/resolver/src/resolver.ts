@@ -29,8 +29,10 @@ export default new Resolver({
       ".react-router-parcel/types/+virtual-parcel.d.ts",
       `
 declare module "virtual:react-router/request-handler" {
-  import { unstable_RouterContextProvider as RouterContextProvider } from "react-router";
-  const requestHandler: (requestContext?: RouterContextProvider) => (request: Request) => Promise<Response>;
+  import type { AppLoadContext, unstable_InitialContext, UNSAFE_MiddlewareEnabled } from "react-router";
+  const requestHandler: (initialContext?: UNSAFE_MiddlewareEnabled extends true
+  ? unstable_InitialContext
+  : AppLoadContext) => (request: Request) => Promise<Response>;
   export default requestHandler;
 }
 
@@ -47,7 +49,20 @@ declare module "virtual:react-router/routes" {
   import { unstable_RSCRouteConfig } from "react-router";
   const routes: unstable_RSCRouteConfig;
   export default routes;
-}`.trim(),
+}
+
+declare module "virtual:react-router/config" {
+  import type { Config } from "@react-router/dev/config";
+  const config: Config;
+  export default config;
+}
+
+declare module "virtual:react-router/appLoadContext" {
+  import { AppLoadContext, unstable_createContext } from 'react-router';
+  const appLoadContext: unstable_createContext<AppLoadContext>;
+  export default appLoadContext;
+}
+`.trim(),
     );
 
     // These aren't used by the build, but written as an example to copy and paste if
@@ -159,15 +174,16 @@ declare module "virtual:react-router/routes" {
       routes,
     });
 
-    return { appDirectory, routes, routesPath, configPath };
+    const routesFile = routes.flatMap((route) => [route.file, route.children?.flatMap((route) => route.file) ?? []]).flat();
+
+    return { appDirectory, routes, routesPath, routesFile, configPath };
   },
-  async resolve({ config, specifier, options }) {
+  async resolve({ config, specifier, options, }) {
     if (specifier === "virtual:react-router/config") {
-      const configPath = await findCodeFile(process.cwd(), "react-router.config")
-      if (configPath) {
-        const code = await fsp.readFile(configPath, "utf-8");
+      if (config.configPath) {
+        const code = await fsp.readFile(config.configPath, "utf-8");
         return {
-          filePath: configPath,
+          filePath: config.configPath,
           code,
         };
       }
@@ -193,8 +209,39 @@ declare module "virtual:react-router/routes" {
       };
     }
 
+    if (specifier === "virtual:react-router/appLoadContext") {
+      let code = `
+import { unstable_createContext } from 'react-router';
+const appLoadContext = unstable_createContext();
+export default appLoadContext;
+`.trim();
+      return {
+        filePath: path.resolve(__dirname, "./rsc.appLoadContext.ts"),
+        code
+      }
+    }
+
     if (specifier === "virtual:react-router/routes") {
-      let code = "export default [";
+      let code = `
+import appLoadContext from "virtual:react-router/appLoadContext";
+// https://github.com/rossipedia/rr-one-context-to-rule-them-all/blob/main/server/app.ts#L25-L44
+function enhanceRouterContextProvider({ action, loader, ...mod }) {
+    function enhanceDataFunction(fn) {
+        return (args) => {
+            const appContext = args.context.get(appLoadContext);
+            const descriptors = Object.getOwnPropertyDescriptors(appContext);
+            Object.defineProperties(args.context, descriptors);
+            return fn(args);
+        };
+    }
+    return {
+        ...mod,
+        action: action ? enhanceDataFunction(action) : undefined,
+        loader: loader ? enhanceDataFunction(loader) : undefined,
+    };
+}
+`.trim();
+      code += "export default [";
 
       const closeRouteSymbol = Symbol("CLOSE_ROUTE");
       let stack: Array<typeof closeRouteSymbol | RouteConfigEntry> = [
@@ -216,7 +263,7 @@ declare module "virtual:react-router/routes" {
             path.resolve(config.appDirectory, route.file),
           ) +
           (route.id === "root" ? "?root=true" : ""),
-        )}),`;
+        )}).then(enhanceRouterContextProvider),`;
 
         code += `id: ${JSON.stringify(route.id || createRouteId(route.file, config.appDirectory))},`;
         if (typeof route.path === "string") {
@@ -241,6 +288,16 @@ declare module "virtual:react-router/routes" {
 
       return {
         filePath: config.routesPath,
+        code,
+      };
+    }
+
+    const routeFile = config.routesFile.find((routeFile) => specifier.includes(routeFile));
+    if (routeFile) {
+      const filePath = path.resolve(options.projectRoot, config.appDirectory, routeFile);
+      const code = await fsp.readFile(filePath, "utf-8");
+      return {
+        filePath,
         code,
       };
     }
