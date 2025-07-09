@@ -1,7 +1,7 @@
 import * as React from "react";
-// @ts-expect-error - no types
 import { renderToReadableStream } from "react-dom/server.edge" assert { env: "react-client" };
 import {
+  unstable_RouterContextProvider as RouterContextProvider,
   unstable_routeRSCServerRequest,
   unstable_RSCStaticRouter,
 } from "react-router" assert { env: "react-client" };
@@ -10,10 +10,10 @@ import { createFromReadableStream } from "react-server-dom-parcel/client.edge" a
 
 import { fetchServer } from "./entry.rsc.ts" assert { env: "react-server" };
 
-const requestHandler = async (request: Request) => {
-  return unstable_routeRSCServerRequest({
+const requestHandler = (requestContext?: RouterContextProvider) => {
+  return (request: Request) => unstable_routeRSCServerRequest({
     request,
-    fetchServer,
+    fetchServer: fetchServer(requestContext),
     createFromReadableStream,
     async renderHTML(getPayload) {
       return await renderToReadableStream(

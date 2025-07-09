@@ -29,7 +29,8 @@ export default new Resolver({
       ".react-router-parcel/types/+virtual-parcel.d.ts",
       `
 declare module "virtual:react-router/request-handler" {
-  const requestHandler: (request: Request) => Promise<Response>;
+  import { unstable_RouterContextProvider as RouterContextProvider } from "react-router";
+  const requestHandler: (requestContext?: RouterContextProvider) => (request: Request) => Promise<Response>;
   export default requestHandler;
 }
 
@@ -96,13 +97,13 @@ declare module "virtual:react-router/routes" {
 
     const rrConfig = configPath
       ? await configLoader
-          .import(configPath)
-          .then((mod) => {
-            return (mod as { default: Config }).default;
-          })
-          .catch((): Config => {
-            return {};
-          })
+        .import(configPath)
+        .then((mod) => {
+          return (mod as { default: Config }).default;
+        })
+        .catch((): Config => {
+          return {};
+        })
       : ({} satisfies Config);
 
     const appDirectory = path.resolve(
@@ -158,9 +159,22 @@ declare module "virtual:react-router/routes" {
       routes,
     });
 
-    return { appDirectory, routes, routesPath };
+    return { appDirectory, routes, routesPath, configPath };
   },
   async resolve({ config, specifier, options }) {
+    if (specifier === "virtual:react-router/config") {
+      const configPath = await findCodeFile(process.cwd(), "react-router.config")
+      if (configPath) {
+        const code = await fsp.readFile(configPath, "utf-8");
+        return {
+          filePath: configPath,
+          code,
+        };
+      }
+
+      return { filePath: path.resolve(__dirname, "./react-router.config.ts"), code: "export default {}" }
+    }
+
     if (specifier === "virtual:react-router/request-handler") {
       const filePath = path.resolve(__dirname, "./entry.request-handler.ts");
       const code = await fsp.readFile(filePath, "utf-8");
@@ -197,11 +211,11 @@ declare module "virtual:react-router/routes" {
         code += "{";
         code += `lazy: () => import(${JSON.stringify(
           "route-module:/" +
-            path.relative(
-              options.projectRoot,
-              path.resolve(config.appDirectory, route.file),
-            ) +
-            (route.id === "root" ? "?root=true" : ""),
+          path.relative(
+            options.projectRoot,
+            path.resolve(config.appDirectory, route.file),
+          ) +
+          (route.id === "root" ? "?root=true" : ""),
         )}),`;
 
         code += `id: ${JSON.stringify(route.id || createRouteId(route.file, config.appDirectory))},`;

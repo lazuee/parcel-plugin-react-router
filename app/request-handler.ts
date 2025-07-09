@@ -1,5 +1,7 @@
 import { createRequestListener } from "@mjackson/node-fetch-server";
 import express from "express";
+import { 
+  unstable_createContext as createContext, unstable_RouterContextProvider as RouterContextProvider } from "react-router";
 
 import reactRouterRequestHandler from "virtual:react-router/request-handler";
 
@@ -13,7 +15,10 @@ app.get("/.well-known/appspecific/com.chrome.devtools.json", (_, res) => {
   res.send("Not Found");
 });
 
-app.use(createRequestListener(reactRouterRequestHandler));
+const requestContext = new RouterContextProvider();
+export const test = createContext(`hello`)
+requestContext.set(test, `hello world from request-handler`)
+app.use(createRequestListener(reactRouterRequestHandler(requestContext)));
 
 app.listen(3000);
 console.log("Server listening on port 3000 (http://localhost:3000)");

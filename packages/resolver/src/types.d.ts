@@ -3,3 +3,9 @@ declare module "virtual:react-router/routes" {
   const routes: unstable_RSCRouteConfig;
   export default routes;
 }
+
+declare module "virtual:react-router/config" {
+import type { Config } from "@react-router/dev/config";
+  const config: Config;
+  export default config;
+}
