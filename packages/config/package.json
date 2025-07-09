@@ -13,7 +13,7 @@
   "author": "Jacob Ebey",
   "license": "ISC",
   "dependencies": {
-    "@parcel/config-default": "^2.15.0",
+    "@parcel/config-default": "^2.15.4",
     "parcel-resolver-react-router-experimental": "1.1.9",
     "parcel-resolver-react-router-typegen-experimental": "1.1.7",
     "parcel-transformer-react-router-experimental": "1.1.7"
